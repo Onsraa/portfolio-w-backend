@@ -14,48 +14,69 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 async function startServer() {
-  // Initialiser la base de données
   await initDatabase();
-
-  // Initialiser les paramètres par défaut
   Settings.initDefaults();
 
   const app = express();
 
-  // Middleware de sécurité
+  app.disable('x-powered-by');
+
   app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: false,
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+    noSniff: true,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   }));
 
-  // CORS
+  const allowedOrigins = config.cors.origin
+    ? (Array.isArray(config.cors.origin) ? config.cors.origin : [config.cors.origin])
+    : [];
+
   app.use(cors({
-    origin: config.cors.origin,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || config.isDevelopment) {
+        callback(null, true);
+      } else {
+        callback(new Error('CORS non autorisé'));
+      }
+    },
     credentials: config.cors.credentials,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 86400,
   }));
 
-  // Rate limiting global
   app.use(rateLimit({
     windowMs: config.rateLimit.windowMs,
     max: config.rateLimit.max,
+    standardHeaders: true,
+    legacyHeaders: false,
     message: {
       success: false,
       error: 'Trop de requêtes. Réessayez plus tard.',
     },
+    skip: (req) => req.ip === '127.0.0.1' && config.isDevelopment,
   }));
 
-  // Parser JSON
-  app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  app.use(express.json({ limit: '2mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
-  // Servir les fichiers statiques (uploads)
-  app.use('/uploads', express.static(join(__dirname, '../uploads')));
+  app.use('/uploads', express.static(join(__dirname, '../uploads'), {
+    maxAge: '1d',
+    etag: true,
+    lastModified: true,
+    setHeaders: (res) => {
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+    },
+  }));
 
-  // Routes API
   app.use('/api', routes);
 
-  // Route 404
   app.use((req, res) => {
     res.status(404).json({
       success: false,
@@ -63,37 +84,47 @@ async function startServer() {
     });
   });
 
-  // Gestion des erreurs globale
   app.use((err, req, res, next) => {
-    console.error('Erreur:', err);
-    
-    // Erreur Multer (upload)
+    if (config.isDevelopment) {
+      console.error('Erreur:', err);
+    }
+
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
         success: false,
         error: 'Fichier trop volumineux',
       });
     }
-    
+
+    if (err.message === 'CORS non autorisé') {
+      return res.status(403).json({
+        success: false,
+        error: 'Origine non autorisée',
+      });
+    }
+
     res.status(err.status || 500).json({
       success: false,
       error: config.isDevelopment ? err.message : 'Erreur serveur',
     });
   });
 
-  // Démarrer le serveur
-  app.listen(config.port, () => {
+  const server = app.listen(config.port, () => {
     console.log(`
 ╔══════════════════════════════════════════════════════════╗
-║                                                          ║
-║   🚀 Serveur Portfolio démarré                           ║
-║                                                          ║
+║   Serveur Portfolio démarré                              ║
 ║   URL:  http://localhost:${config.port}                        ║
 ║   Mode: ${config.nodeEnv.padEnd(12)}                           ║
-║   API:  http://localhost:${config.port}/api                    ║
-║                                                          ║
 ╚══════════════════════════════════════════════════════════╝
     `);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`Port ${config.port} déjà utilisé. Arrêtez l'autre instance ou changez le port.`);
+      process.exit(1);
+    }
+    throw err;
   });
 }
 

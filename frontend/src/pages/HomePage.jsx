@@ -3,10 +3,12 @@ import { useLocation, useOutletContext } from 'react-router-dom';
 import { SectionHeader, Loading } from '@components/ui';
 import { ExperienceCard, ProjectCard, SkillsBox } from '@components/sections';
 import { experiencesApi, projectsApi, skillsApi } from '@config/api';
+import { useLanguage } from '@context/LanguageContext';
 
 export default function HomePage() {
     const { loaded } = useOutletContext();
     const location = useLocation();
+    const { t } = useLanguage();
     const [activeSection, setActiveSection] = useState('experience');
     const [experiences, setExperiences] = useState([]);
     const [projects, setProjects] = useState([]);
@@ -67,8 +69,8 @@ export default function HomePage() {
             {activeSection === 'experience' && (
                 <section>
                     <SectionHeader
-                        title="Expérience"
-                        count={`${experiences.length} postes · ${yearsOfExperience} ans`}
+                        title={t.experience}
+                        count={`${experiences.length} ${t.posts} · ${yearsOfExperience} ${t.years}`}
                     />
                     <div style={{ marginTop: '8px' }}>
                         {experiences.map((exp, index) => (
@@ -87,8 +89,8 @@ export default function HomePage() {
             {activeSection === 'projets' && (
                 <section>
                     <SectionHeader
-                        title="Projets"
-                        count={`${projects.length} entries`}
+                        title={t.projects}
+                        count={`${projects.length} ${t.entries}`}
                     />
                     <div>
                         {projects.map((project) => (

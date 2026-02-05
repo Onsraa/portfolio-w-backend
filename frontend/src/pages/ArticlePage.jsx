@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Loading } from '@components/ui';
+import { Loading, TranslationBadge } from '@components/ui';
 import { articlesApi } from '@config/api';
+import { useTheme } from '@context/ThemeContext';
+import { useLanguage } from '@context/LanguageContext';
 
-// Rendu des blocs de contenu
 function ContentBlock({ block }) {
+    const { colors } = useTheme();
+    const { getLocalized } = useLanguage();
+
     switch (block.type) {
         case 'paragraph':
             return (
                 <p style={{
                     margin: '0 0 24px 0',
-                    color: '#bbb',
+                    color: colors.textSecondary,
                     fontSize: '15px',
                     lineHeight: 1.8,
                 }}>
@@ -24,12 +28,12 @@ function ContentBlock({ block }) {
             return (
                 <Tag style={{
                     margin: '48px 0 16px 0',
-                    color: '#fff',
+                    color: colors.accent,
                     fontSize: sizes[block.level] || '22px',
                     fontWeight: 400,
                     letterSpacing: '-0.01em',
                 }}>
-          <span style={{ color: '#333', marginRight: '12px' }}>
+          <span style={{ color: colors.textDarkest, marginRight: '12px' }}>
             {'#'.repeat(block.level || 2)}
           </span>
                     {block.content}
@@ -40,17 +44,16 @@ function ContentBlock({ block }) {
             return (
                 <div style={{
                     margin: '24px 0',
-                    background: '#111',
-                    border: '1px solid #222',
-                    borderRadius: '0',
+                    background: colors.bgHover,
+                    border: `1px solid ${colors.borderLight}`,
                     overflow: 'hidden',
                 }}>
                     <div style={{
                         padding: '8px 16px',
-                        background: '#0d0d0d',
-                        borderBottom: '1px solid #222',
+                        background: colors.bgSecondary,
+                        borderBottom: `1px solid ${colors.borderLight}`,
                         fontSize: '11px',
-                        color: '#555',
+                        color: colors.textDark,
                         textTransform: 'uppercase',
                         letterSpacing: '0.1em',
                     }}>
@@ -62,7 +65,7 @@ function ContentBlock({ block }) {
                         overflow: 'auto',
                         fontSize: '13px',
                         lineHeight: 1.6,
-                        color: '#aaa',
+                        color: colors.textSecondary,
                     }}>
             <code>{block.content}</code>
           </pre>
@@ -74,8 +77,8 @@ function ContentBlock({ block }) {
                 <blockquote style={{
                     margin: '32px 0',
                     padding: '16px 24px',
-                    borderLeft: '2px solid #333',
-                    color: '#888',
+                    borderLeft: `2px solid ${colors.textDarkest}`,
+                    color: colors.textSecondary,
                     fontStyle: 'italic',
                     fontSize: '15px',
                     lineHeight: 1.7,
@@ -93,14 +96,14 @@ function ContentBlock({ block }) {
                         style={{
                             width: '100%',
                             height: 'auto',
-                            border: '1px solid #222',
+                            border: `1px solid ${colors.borderLight}`,
                         }}
                     />
                     {block.alt && (
                         <figcaption style={{
                             marginTop: '8px',
                             fontSize: '12px',
-                            color: '#555',
+                            color: colors.textDark,
                             textAlign: 'center',
                         }}>
                             {block.alt}
@@ -116,13 +119,13 @@ function ContentBlock({ block }) {
                 <ul style={{
                     margin: '24px 0',
                     paddingLeft: '24px',
-                    color: '#bbb',
+                    color: colors.textSecondary,
                     fontSize: '15px',
                     lineHeight: 1.8,
                 }}>
                     {items.map((item, i) => (
                         <li key={i} style={{ marginBottom: '8px' }}>
-                            <span style={{ color: '#444', marginRight: '8px' }}>→</span>
+                            <span style={{ color: colors.textDarker, marginRight: '8px' }}>→</span>
                             {item}
                         </li>
                     ))}
@@ -136,24 +139,36 @@ function ContentBlock({ block }) {
 
 export default function ArticlePage() {
     const { slug } = useParams();
+    const { colors } = useTheme();
+    const { t, getLocalized } = useLanguage();
     const [article, setArticle] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        loadArticle();
-    }, [slug]);
+        let isMounted = true;
 
-    const loadArticle = async () => {
-        try {
-            const { data } = await articlesApi.get(slug);
-            setArticle(data.article);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+        const loadArticle = async () => {
+            try {
+                const { data } = await articlesApi.get(slug);
+                if (isMounted) {
+                    setArticle(data.article);
+                    setLoading(false);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    setError(err.message);
+                    setLoading(false);
+                }
+            }
+        };
+
+        loadArticle();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [slug]);
 
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('fr-FR', {
@@ -168,54 +183,56 @@ export default function ArticlePage() {
     if (error || !article) {
         return (
             <div style={{ textAlign: 'center', padding: '60px 0' }}>
-                <h1 style={{ color: '#fff', fontSize: '24px', fontWeight: 400 }}>
-                    Article non trouvé
+                <h1 style={{ color: colors.accent, fontSize: '24px', fontWeight: 400 }}>
+                    {t.articleNotFound}
                 </h1>
-                <p style={{ color: '#666', marginTop: '16px' }}>
-                    L'article que vous recherchez n'existe pas ou a été supprimé.
+                <p style={{ color: colors.textMuted, marginTop: '16px' }}>
+                    {t.articleNotFoundDesc}
                 </p>
                 <Link
                     to="/blog"
                     style={{
                         display: 'inline-block',
                         marginTop: '24px',
-                        color: '#888',
+                        color: colors.textSecondary,
                         textDecoration: 'none',
                     }}
                 >
-                    <span style={{ color: '#444' }}>←</span> Retour aux articles
+                    <span style={{ color: colors.textDarker }}>←</span> {t.backToArticles}
                 </Link>
             </div>
         );
     }
 
+    const title = getLocalized(article, 'title');
+
     return (
         <article>
-            {/* Header */}
             <header style={{ marginBottom: '48px' }}>
                 <Link
                     to="/blog"
                     style={{
                         display: 'inline-block',
                         marginBottom: '32px',
-                        color: '#555',
+                        color: colors.textDark,
                         textDecoration: 'none',
                         fontSize: '13px',
                     }}
                 >
                     <span style={{ marginRight: '8px' }}>←</span>
-                    Retour aux articles
+                    {t.backToArticles}
                 </Link>
 
                 <h1 style={{
                     margin: 0,
                     fontSize: 'clamp(28px, 5vw, 36px)',
                     fontWeight: 400,
-                    color: '#fff',
+                    color: colors.accent,
                     letterSpacing: '-0.02em',
                     lineHeight: 1.3,
                 }}>
-                    {article.title}
+                    {title.value}
+                    <TranslationBadge show={title.needsTranslation} />
                 </h1>
 
                 <div style={{
@@ -224,14 +241,14 @@ export default function ArticlePage() {
                     gap: '24px',
                     flexWrap: 'wrap',
                     fontSize: '13px',
-                    color: '#555',
+                    color: colors.textDark,
                 }}>
           <span>
-            <span style={{ color: '#333' }}>date:</span>{' '}
+            <span style={{ color: colors.textDarkest }}>{t.date}:</span>{' '}
               {formatDate(article.published_at || article.created_at)}
           </span>
                     <span>
-            <span style={{ color: '#333' }}>views:</span> {article.views || 0}
+            <span style={{ color: colors.textDarkest }}>{t.views}:</span> {article.views || 0}
           </span>
                 </div>
 
@@ -248,8 +265,8 @@ export default function ArticlePage() {
                                 style={{
                                     padding: '4px 12px',
                                     fontSize: '11px',
-                                    color: '#666',
-                                    border: '1px solid #222',
+                                    color: colors.textMuted,
+                                    border: `1px solid ${colors.borderLight}`,
                                 }}
                             >
                 #{tag}
@@ -259,7 +276,6 @@ export default function ArticlePage() {
                 )}
             </header>
 
-            {/* Cover image */}
             {article.cover_image && (
                 <img
                     src={article.cover_image}
@@ -268,32 +284,30 @@ export default function ArticlePage() {
                         width: '100%',
                         height: 'auto',
                         marginBottom: '48px',
-                        border: '1px solid #222',
+                        border: `1px solid ${colors.borderLight}`,
                     }}
                 />
             )}
 
-            {/* Content */}
             <div style={{ marginBottom: '60px' }}>
                 {article.content?.map((block, i) => (
                     <ContentBlock key={i} block={block} />
                 ))}
             </div>
 
-            {/* Footer */}
             <footer style={{
                 paddingTop: '32px',
-                borderTop: '1px solid #1a1a1a',
+                borderTop: `1px solid ${colors.border}`,
             }}>
                 <Link
                     to="/blog"
                     style={{
-                        color: '#666',
+                        color: colors.textMuted,
                         textDecoration: 'none',
                         fontSize: '14px',
                     }}
                 >
-                    <span style={{ color: '#444' }}>←</span> Voir tous les articles
+                    <span style={{ color: colors.textDarker }}>←</span> {t.viewAllArticles}
                 </Link>
             </footer>
         </article>

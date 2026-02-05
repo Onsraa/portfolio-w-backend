@@ -5,18 +5,18 @@ import { validate, articleSchema } from '../middleware/validation.js';
 
 const router = Router();
 
-// GET /api/articles - Liste des articles (public: publiés uniquement)
 router.get('/', optionalAuth, (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 10));
     const isAdmin = req.user?.role === 'admin';
-    
+
     const result = Article.findAll({
-      page: parseInt(page, 10),
-      limit: parseInt(limit, 10),
+      page,
+      limit,
       publishedOnly: !isAdmin,
     });
-    
+
     res.json({
       success: true,
       data: result,
@@ -30,19 +30,55 @@ router.get('/', optionalAuth, (req, res) => {
   }
 });
 
-// GET /api/articles/:slug - Détail d'un article
-router.get('/:slug', optionalAuth, (req, res) => {
+router.get('/by-id/:id', authenticate, (req, res) => {
   try {
-    const article = Article.findBySlug(req.params.slug);
-    
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id) || id <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'ID invalide',
+      });
+    }
+
+    const article = Article.findById(id);
     if (!article) {
       return res.status(404).json({
         success: false,
         error: 'Article non trouvé',
       });
     }
-    
-    // Seuls les admins peuvent voir les articles non publiés
+
+    res.json({
+      success: true,
+      data: { article },
+    });
+  } catch (error) {
+    console.error('Erreur récupération article:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erreur serveur',
+    });
+  }
+});
+
+router.get('/:slug', optionalAuth, (req, res) => {
+  try {
+    const slug = req.params.slug;
+    if (!slug || !/^[a-z0-9-]+$/.test(slug)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Slug invalide',
+      });
+    }
+
+    const article = Article.findBySlug(slug);
+    if (!article) {
+      return res.status(404).json({
+        success: false,
+        error: 'Article non trouvé',
+      });
+    }
+
     const isAdmin = req.user?.role === 'admin';
     if (!article.is_published && !isAdmin) {
       return res.status(404).json({
@@ -50,12 +86,11 @@ router.get('/:slug', optionalAuth, (req, res) => {
         error: 'Article non trouvé',
       });
     }
-    
-    // Incrémenter les vues (seulement pour les visiteurs)
+
     if (!isAdmin) {
       Article.incrementViews(article.id);
     }
-    
+
     res.json({
       success: true,
       data: { article },
@@ -69,48 +104,51 @@ router.get('/:slug', optionalAuth, (req, res) => {
   }
 });
 
-// POST /api/articles - Créer un article (admin)
 router.post('/', authenticate, validate(articleSchema), (req, res) => {
   try {
     const article = Article.create(req.body);
-    
+
     res.status(201).json({
       success: true,
       data: { article },
     });
   } catch (error) {
     console.error('Erreur création article:', error);
-    
-    // Gestion des erreurs de contrainte unique
-    if (error.message && error.message.includes('UNIQUE constraint failed')) {
+
+    if (error.message?.includes('UNIQUE constraint failed')) {
       return res.status(400).json({
         success: false,
-        error: 'Un article avec ce slug existe déjà. Essayez un slug différent.',
+        error: 'Ce slug existe déjà',
       });
     }
-    
+
     res.status(500).json({
       success: false,
-      error: 'Erreur lors de la création de l\'article',
+      error: 'Erreur création article',
     });
   }
 });
 
-// PUT /api/articles/:id - Mettre à jour un article (admin)
 router.put('/:id', authenticate, validate(articleSchema), (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
+    if (isNaN(id) || id <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'ID invalide',
+      });
+    }
+
     const existing = Article.findById(id);
-    
     if (!existing) {
       return res.status(404).json({
         success: false,
         error: 'Article non trouvé',
       });
     }
-    
+
     const article = Article.update(id, req.body);
-    
+
     res.json({
       success: true,
       data: { article },
@@ -124,21 +162,26 @@ router.put('/:id', authenticate, validate(articleSchema), (req, res) => {
   }
 });
 
-// DELETE /api/articles/:id - Supprimer un article (admin)
 router.delete('/:id', authenticate, (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
+    if (isNaN(id) || id <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'ID invalide',
+      });
+    }
+
     const existing = Article.findById(id);
-    
     if (!existing) {
       return res.status(404).json({
         success: false,
         error: 'Article non trouvé',
       });
     }
-    
+
     Article.delete(id);
-    
+
     res.json({
       success: true,
       message: 'Article supprimé',
@@ -152,12 +195,24 @@ router.delete('/:id', authenticate, (req, res) => {
   }
 });
 
-// PATCH /api/articles/:id/publish - Publier/dépublier un article (admin)
 router.patch('/:id/publish', authenticate, (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
+    if (isNaN(id) || id <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'ID invalide',
+      });
+    }
+
     const { is_published } = req.body;
-    
+    if (typeof is_published !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        error: 'is_published doit être un booléen',
+      });
+    }
+
     const existing = Article.findById(id);
     if (!existing) {
       return res.status(404).json({
@@ -165,9 +220,9 @@ router.patch('/:id/publish', authenticate, (req, res) => {
         error: 'Article non trouvé',
       });
     }
-    
+
     const article = Article.update(id, { is_published });
-    
+
     res.json({
       success: true,
       data: { article },

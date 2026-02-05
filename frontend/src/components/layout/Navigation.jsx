@@ -18,8 +18,8 @@ export default function Navigation({ sections = [] }) {
 
   const defaultSections = [
     { id: 'experience', label: 'Expérience', href: '/#experience' },
-    { id: 'projets', label: 'Projets', href: '/#projets' },
-    { id: 'articles', label: 'Articles', href: '/#blog' },
+    { id: 'projets', label: 'Projets', href: '/#projects' },
+    { id: 'articles', label: 'Articles', href: '/blog' },
   ];
 
   const navSections = sections.length > 0 ? sections : defaultSections;

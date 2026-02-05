@@ -3,9 +3,13 @@ import { useOutletContext } from 'react-router-dom';
 import { SectionHeader, Loading } from '@components/ui';
 import { ArticleCard } from '@components/sections';
 import { articlesApi } from '@config/api';
+import { useTheme } from '@context/ThemeContext';
+import { useLanguage } from '@context/LanguageContext';
 
 export default function BlogPage() {
     const { loaded } = useOutletContext();
+    const { colors } = useTheme();
+    const { t } = useLanguage();
     const [articles, setArticles] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -43,13 +47,13 @@ export default function BlogPage() {
             transition: 'all 0.5s ease'
         }}>
             <SectionHeader
-                title="Articles"
-                count={`${articles.length} entries`}
+                title={t.articles}
+                count={`${articles.length} ${t.entries}`}
             />
 
             {articles.length === 0 ? (
-                <p style={{ color: '#666', marginTop: '24px' }}>
-                    Aucun article publié pour le moment.
+                <p style={{ color: colors.textMuted, marginTop: '24px' }}>
+                    {t.noArticles}
                 </p>
             ) : (
                 <div>

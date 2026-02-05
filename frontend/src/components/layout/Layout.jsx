@@ -3,11 +3,15 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
 import { settingsApi } from '@config/api';
+import { useTheme } from '@context/ThemeContext';
+import { useLanguage } from '@context/LanguageContext';
 
 export default function Layout() {
     const [settings, setSettings] = useState({});
     const [loaded, setLoaded] = useState(false);
     const location = useLocation();
+    const { colors } = useTheme();
+    const { t } = useLanguage();
 
     useEffect(() => {
         loadSettings();
@@ -24,7 +28,6 @@ export default function Layout() {
         }
     };
 
-    // Déterminer quel onglet est actif
     const getActiveTab = () => {
         if (location.pathname.startsWith('/blog')) return 'articles';
         if (location.hash === '#projets') return 'projets';
@@ -37,12 +40,12 @@ export default function Layout() {
         background: 'none',
         border: 'none',
         padding: '20px 24px',
-        color: isActive ? '#fff' : '#444',
+        color: isActive ? colors.accent : colors.textDarker,
         fontSize: '13px',
         fontFamily: 'inherit',
         textTransform: 'uppercase',
         letterSpacing: '0.1em',
-        borderBottom: isActive ? '1px solid #fff' : '1px solid transparent',
+        borderBottom: isActive ? `1px solid ${colors.accent}` : '1px solid transparent',
         marginBottom: '-1px',
         transition: 'all 0.15s ease',
         cursor: 'pointer',
@@ -52,8 +55,8 @@ export default function Layout() {
     return (
         <div style={{
             minHeight: '100vh',
-            backgroundColor: '#0a0a0a',
-            color: '#e0e0e0',
+            backgroundColor: colors.bg,
+            color: colors.text,
             fontFamily: '"IBM Plex Mono", "SF Mono", "Fira Code", monospace',
             fontSize: '15px',
             lineHeight: 1.7,
@@ -65,18 +68,18 @@ export default function Layout() {
                 maxWidth: '900px',
                 margin: '0 auto',
                 padding: '0 24px',
-                borderBottom: '1px solid #1a1a1a',
+                borderBottom: `1px solid ${colors.border}`,
                 display: 'flex',
                 gap: '0'
             }}>
                 <Link to="/" style={navButtonStyle(activeTab === 'experience')}>
-                    experience
+                    {t.experience}
                 </Link>
                 <Link to="/#projets" style={navButtonStyle(activeTab === 'projets')}>
-                    projets
+                    {t.projects}
                 </Link>
-            <Link to="/blog" style={navButtonStyle(activeTab === 'articles')}>
-                    articles
+                <Link to="/blog" style={navButtonStyle(activeTab === 'articles')}>
+                    {t.articles}
                 </Link>
             </nav>
 

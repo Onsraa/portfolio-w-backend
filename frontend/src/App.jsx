@@ -1,64 +1,41 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from '@context/AuthContext';
-import { Layout } from '@components/layout';
-import { HomePage, BlogPage, ArticlePage } from '@pages';
-import {
-  LoginPage,
-  AdminLayout,
-  DashboardPage,
-  ArticlesListPage,
-  ArticleEditorPage,
-  ExperiencesPage,
-  ProjectsPage,
-  SkillsPage,
-  SettingsPage,
-} from '@pages/admin';
+import { Routes, Route } from 'react-router-dom';
+import Layout from '@components/layout/Layout';
+import AdminLayout from '@components/admin/AdminLayout';
+import HomePage from '@pages/HomePage';
+import BlogPage from '@pages/BlogPage';
+import ArticlePage from '@pages/ArticlePage';
+import LoginPage from '@pages/admin/LoginPage';
+import DashboardPage from '@pages/admin/DashboardPage';
+import ExperiencesPage from '@pages/admin/ExperiencesPage';
+import ProjectsPage from '@pages/admin/ProjectsPage';
+import ArticlesPage from '@pages/admin/ArticlesPage';
+import ArticleEditorPage from '@pages/admin/ArticleEditorPage';
+import SkillsPage from '@pages/admin/SkillsPage';
+import SettingsPage from '@pages/admin/SettingsPage';
+import ProtectedRoute from '@components/admin/ProtectedRoute';
 
 export default function App() {
-  return (
-    <AuthProvider>
-      <BrowserRouter>
+    return (
         <Routes>
-          {/* Routes publiques */}
-          <Route path="/" element={<Layout />}>
-            <Route index element={<HomePage />} />
-            <Route path="blog" element={<BlogPage />} />
-            <Route path="blog/:slug" element={<ArticlePage />} />
-          </Route>
+            {/* Public routes */}
+            <Route path="/" element={<Layout />}>
+                <Route index element={<HomePage />} />
+                <Route path="blog" element={<BlogPage />} />
+                <Route path="blog/:slug" element={<ArticlePage />} />
+            </Route>
 
-          {/* Routes admin */}
-          <Route path="/admin/login" element={<LoginPage />} />
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="articles" element={<ArticlesListPage />} />
-            <Route path="articles/:id" element={<ArticleEditorPage />} />
-            <Route path="experiences" element={<ExperiencesPage />} />
-            <Route path="projects" element={<ProjectsPage />} />
-            <Route path="skills" element={<SkillsPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-          </Route>
-
-          {/* 404 */}
-          <Route path="*" element={
-            <div style={{
-              minHeight: '100vh',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: '#0a0a0a',
-              fontFamily: '"IBM Plex Mono", monospace',
-            }}>
-              <div style={{ textAlign: 'center' }}>
-                <h1 style={{ color: '#fff', fontSize: '48px', margin: 0 }}>404</h1>
-                <p style={{ color: '#555', marginTop: '16px' }}>Page non trouvée</p>
-                <a href="/" style={{ color: '#888', marginTop: '24px', display: 'inline-block' }}>
-                  ← Retour à l'accueil
-                </a>
-              </div>
-            </div>
-          } />
+            {/* Admin routes */}
+            <Route path="/admin/login" element={<LoginPage />} />
+            <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+                <Route index element={<DashboardPage />} />
+                <Route path="experiences" element={<ExperiencesPage />} />
+                <Route path="projects" element={<ProjectsPage />} />
+                <Route path="articles" element={<ArticlesPage />} />
+                <Route path="articles/new" element={<ArticleEditorPage />} />
+                <Route path="articles/:id/edit" element={<ArticleEditorPage />} />
+                <Route path="skills" element={<SkillsPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+            </Route>
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
-  );
+    );
 }
