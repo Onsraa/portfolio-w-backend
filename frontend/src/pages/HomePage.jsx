@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useOutletContext } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 import { SectionHeader, Loading } from '@components/ui';
 import { ExperienceCard, ProjectCard, SkillsBox } from '@components/sections';
 import { experiencesApi, projectsApi, skillsApi } from '@config/api';
 import { useLanguage } from '@context/LanguageContext';
 
-export default function HomePage() {
+export default function HomePage({ section = 'experience' }) {
     const { loaded } = useOutletContext();
-    const location = useLocation();
     const { t } = useLanguage();
-    const [activeSection, setActiveSection] = useState('experience');
     const [experiences, setExperiences] = useState([]);
     const [projects, setProjects] = useState([]);
     const [skills, setSkills] = useState({});
@@ -46,15 +44,6 @@ export default function HomePage() {
         };
     }, []);
 
-    useEffect(() => {
-        const hash = location.hash.replace('#', '');
-        if (hash === 'projets') {
-            setActiveSection('projets');
-        } else {
-            setActiveSection('experience');
-        }
-    }, [location]);
-
     const yearsOfExperience = new Date().getFullYear() - 2022;
 
     if (loading) return <Loading />;
@@ -65,8 +54,8 @@ export default function HomePage() {
             transform: loaded ? 'translateY(0)' : 'translateY(20px)',
             transition: 'all 0.5s ease'
         }}>
-            {/* Section Expérience */}
-            {activeSection === 'experience' && (
+            {/* Section Experience */}
+            {section === 'experience' && (
                 <section>
                     <SectionHeader
                         title={t.experience}
@@ -85,8 +74,8 @@ export default function HomePage() {
                 </section>
             )}
 
-            {/* Section Projets */}
-            {activeSection === 'projets' && (
+            {/* Section Projects */}
+            {section === 'projects' && (
                 <section>
                     <SectionHeader
                         title={t.projects}

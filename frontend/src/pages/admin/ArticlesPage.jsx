@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Loading } from '@components/ui';
 import { articlesApi } from '@config/api';
+import { useTheme } from '@context/ThemeContext';
 
 export default function ArticlesListPage() {
+  const { colors } = useTheme();
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
@@ -26,7 +28,7 @@ export default function ArticlesListPage() {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Supprimer cet article ?')) return;
-    
+
     try {
       await articlesApi.delete(id);
       setArticles(articles.filter(a => a.id !== id));
@@ -38,7 +40,7 @@ export default function ArticlesListPage() {
   const handleTogglePublish = async (article) => {
     try {
       await articlesApi.publish(article.id, !article.is_published);
-      setArticles(articles.map(a => 
+      setArticles(articles.map(a =>
         a.id === article.id ? { ...a, is_published: !a.is_published } : a
       ));
     } catch (err) {
@@ -64,7 +66,7 @@ export default function ArticlesListPage() {
           margin: 0,
           fontSize: '24px',
           fontWeight: 400,
-          color: '#fff',
+          color: colors.accent,
         }}>
           Articles
         </h1>
@@ -77,21 +79,21 @@ export default function ArticlesListPage() {
         <div style={{
           padding: '60px',
           textAlign: 'center',
-          border: '1px solid #1a1a1a',
-          background: '#0d0d0d',
+          border: `1px solid ${colors.border}`,
+          background: colors.bgSecondary,
         }}>
-          <p style={{ color: '#555', margin: 0 }}>Aucun article</p>
+          <p style={{ color: colors.textDark, margin: 0 }}>Aucun article</p>
           <Link
             to="/admin/articles/new"
-            style={{ color: '#888', fontSize: '14px' }}
+            style={{ color: colors.textSecondary, fontSize: '14px' }}
           >
             Créer votre premier article
           </Link>
         </div>
       ) : (
         <div style={{
-          border: '1px solid #1a1a1a',
-          background: '#0d0d0d',
+          border: `1px solid ${colors.border}`,
+          background: colors.bgSecondary,
         }}>
           {/* Header */}
           <div style={{
@@ -99,9 +101,9 @@ export default function ArticlesListPage() {
             gridTemplateColumns: '1fr 100px 100px 80px 120px',
             gap: '16px',
             padding: '12px 20px',
-            borderBottom: '1px solid #1a1a1a',
+            borderBottom: `1px solid ${colors.border}`,
             fontSize: '11px',
-            color: '#555',
+            color: colors.textDark,
             textTransform: 'uppercase',
             letterSpacing: '0.1em',
           }}>
@@ -121,14 +123,14 @@ export default function ArticlesListPage() {
                 gridTemplateColumns: '1fr 100px 100px 80px 120px',
                 gap: '16px',
                 padding: '16px 20px',
-                borderBottom: '1px solid #1a1a1a',
+                borderBottom: `1px solid ${colors.border}`,
                 alignItems: 'center',
               }}
             >
               <Link
-                to={`/admin/articles/${article.id}`}
+                to={`/admin/articles/${article.id}/edit`}
                 style={{
-                  color: '#ccc',
+                  color: colors.text,
                   textDecoration: 'none',
                   fontSize: '14px',
                   overflow: 'hidden',
@@ -136,36 +138,37 @@ export default function ArticlesListPage() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {article.title}
+                {article.title_fr || article.title_en || 'Sans titre'}
               </Link>
-              
+
               <button
                 onClick={() => handleTogglePublish(article)}
                 style={{
                   padding: '4px 8px',
                   fontSize: '11px',
-                  background: article.is_published ? '#1a2a1a' : '#2a2a1a',
-                  color: article.is_published ? '#5a8a5a' : '#8a8a5a',
-                  border: 'none',
+                  background: colors.bgHover,
+                  color: article.is_published ? '#5a8a5a' : colors.textMuted,
+                  border: `1px solid ${colors.border}`,
                   cursor: 'pointer',
+                  fontFamily: 'inherit',
                 }}
               >
                 {article.is_published ? 'publié' : 'brouillon'}
               </button>
-              
-              <span style={{ color: '#555', fontSize: '12px' }}>
+
+              <span style={{ color: colors.textDark, fontSize: '12px' }}>
                 {formatDate(article.created_at)}
               </span>
-              
-              <span style={{ color: '#555', fontSize: '12px' }}>
+
+              <span style={{ color: colors.textDark, fontSize: '12px' }}>
                 {article.views || 0}
               </span>
-              
+
               <div style={{ display: 'flex', gap: '8px' }}>
                 <Link
-                  to={`/admin/articles/${article.id}`}
+                  to={`/admin/articles/${article.id}/edit`}
                   style={{
-                    color: '#666',
+                    color: colors.textMuted,
                     fontSize: '12px',
                     textDecoration: 'none',
                   }}
@@ -177,9 +180,10 @@ export default function ArticlesListPage() {
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#664444',
+                    color: '#aa4444',
                     fontSize: '12px',
                     cursor: 'pointer',
+                    fontFamily: 'inherit',
                   }}
                 >
                   Suppr.

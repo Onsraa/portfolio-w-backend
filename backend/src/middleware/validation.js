@@ -106,6 +106,7 @@ export const experienceSchema = z.object({
     tech: z.array(z.string().max(50)).max(30).optional(),
     is_current: z.boolean().optional(),
     is_internship: z.boolean().optional(),
+    is_apprenticeship: z.boolean().optional(),
 }).refine(
     (data) => (data.role_fr && data.role_fr.trim().length > 0) || (data.role_en && data.role_en.trim().length > 0),
     { message: 'Au moins un rôle (FR ou EN) est requis', path: ['role_fr'] }

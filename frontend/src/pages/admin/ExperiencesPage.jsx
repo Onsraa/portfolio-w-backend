@@ -16,6 +16,7 @@ function ExperienceForm({ experience, onSave, onCancel }) {
         tech: [],
         is_current: false,
         is_internship: false,
+        is_apprenticeship: false,
     });
     const [techInput, setTechInput] = useState((experience?.tech || []).join(', '));
     const [saving, setSaving] = useState(false);
@@ -155,7 +156,7 @@ function ExperienceForm({ experience, onSave, onCancel }) {
                 />
             </div>
 
-            <div style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', gap: '24px', marginBottom: '24px', flexWrap: 'wrap' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: colors.textMuted, fontSize: '14px' }}>
                     <input
                         type="checkbox"
@@ -167,10 +168,18 @@ function ExperienceForm({ experience, onSave, onCancel }) {
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: colors.textMuted, fontSize: '14px' }}>
                     <input
                         type="checkbox"
+                        checked={form.is_apprenticeship}
+                        onChange={(e) => setForm({ ...form, is_apprenticeship: e.target.checked })}
+                    />
+                    Alternance
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: colors.textMuted, fontSize: '14px' }}>
+                    <input
+                        type="checkbox"
                         checked={form.is_internship}
                         onChange={(e) => setForm({ ...form, is_internship: e.target.checked })}
                     />
-                    Stage/Alternance
+                    Stage
                 </label>
             </div>
 
@@ -300,7 +309,8 @@ export default function ExperiencesPage() {
                                 <p style={{ margin: '4px 0 0 0', color: colors.textMuted, fontSize: '13px' }}>
                                     {exp.period}
                                     {exp.is_current && <span style={{ marginLeft: '12px', color: '#5a8a5a' }}>● Actuel</span>}
-                                    {exp.is_internship && <span style={{ marginLeft: '12px', color: '#5a5a8a' }}>● Stage</span>}
+                                    {exp.is_apprenticeship && <span style={{ marginLeft: '12px', color: '#3858c9' }}>● Alternance</span>}
+                                    {exp.is_internship && <span style={{ marginLeft: '12px', color: '#2e7d32' }}>● Stage</span>}
                                 </p>
                             </div>
                             <div style={{ display: 'flex', gap: '12px' }}>

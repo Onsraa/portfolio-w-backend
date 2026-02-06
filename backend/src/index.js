@@ -2,13 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 import config from './config/index.js';
 import { initDatabase } from './config/database.js';
 import routes from './routes/index.js';
-import { Settings } from './models/index.js';
+import { User, Settings } from './models/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -16,6 +17,22 @@ const __dirname = dirname(__filename);
 async function startServer() {
   await initDatabase();
   Settings.initDefaults();
+
+  // Auto-create admin from .env if no admin exists yet
+  if (!User.adminExists() && config.admin.password) {
+    try {
+      User.create({
+        username: config.admin.username,
+        email: config.admin.email,
+        password: config.admin.password,
+      });
+      console.log(`✓ Administrateur créé: ${config.admin.username}`);
+    } catch (err) {
+      if (!err.message?.includes('UNIQUE')) {
+        console.error('Erreur création admin:', err.message);
+      }
+    }
+  }
 
   const app = express();
 
@@ -77,12 +94,22 @@ async function startServer() {
 
   app.use('/api', routes);
 
-  app.use((req, res) => {
-    res.status(404).json({
-      success: false,
-      error: 'Route non trouvée',
+  // In production, serve the built frontend
+  const frontendDist = join(__dirname, '../../frontend/dist');
+  if (!config.isDevelopment && fs.existsSync(frontendDist)) {
+    app.use(express.static(frontendDist));
+    // SPA fallback: serve index.html for all non-API routes
+    app.get('*', (req, res) => {
+      res.sendFile(join(frontendDist, 'index.html'));
     });
-  });
+  } else {
+    app.use((req, res) => {
+      res.status(404).json({
+        success: false,
+        error: 'Route non trouvée',
+      });
+    });
+  }
 
   app.use((err, req, res, next) => {
     if (config.isDevelopment) {

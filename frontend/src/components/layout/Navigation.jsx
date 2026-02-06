@@ -1,25 +1,25 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useTheme } from '@context/ThemeContext';
+import { useLanguage } from '@context/LanguageContext';
 
 export default function Navigation({ sections = [] }) {
   const location = useLocation();
+  const { colors } = useTheme();
+  const { t } = useLanguage();
 
-  // Déterminer la section active basée sur l'URL ou le hash
   const getActiveSection = () => {
     const path = location.pathname;
-    if (path.startsWith('/blog')) return 'articles';
-    if (path === '/') {
-      const hash = location.hash.replace('#', '');
-      return hash || 'experience';
-    }
+    if (path.startsWith('/articles')) return 'articles';
+    if (path.startsWith('/projects')) return 'projects';
     return 'experience';
   };
 
   const activeSection = getActiveSection();
 
   const defaultSections = [
-    { id: 'experience', label: 'Expérience', href: '/#experience' },
-    { id: 'projets', label: 'Projets', href: '/#projects' },
-    { id: 'articles', label: 'Articles', href: '/blog' },
+    { id: 'experience', label: t.experience, href: '/' },
+    { id: 'projects', label: t.projects, href: '/projects' },
+    { id: 'articles', label: t.articles, href: '/articles' },
   ];
 
   const navSections = sections.length > 0 ? sections : defaultSections;
@@ -29,7 +29,7 @@ export default function Navigation({ sections = [] }) {
       maxWidth: '900px',
       margin: '0 auto',
       padding: '0 24px',
-      borderBottom: '1px solid #1a1a1a',
+      borderBottom: `1px solid ${colors.border}`,
       display: 'flex',
       gap: '0'
     }}>
@@ -41,13 +41,13 @@ export default function Navigation({ sections = [] }) {
             background: 'none',
             border: 'none',
             padding: '20px 24px',
-            color: activeSection === section.id ? '#fff' : '#444',
+            color: activeSection === section.id ? colors.accent : colors.textDarker,
             fontSize: '13px',
             fontFamily: 'inherit',
             textTransform: 'uppercase',
             letterSpacing: '0.1em',
             textDecoration: 'none',
-            borderBottom: activeSection === section.id ? '1px solid #fff' : '1px solid transparent',
+            borderBottom: activeSection === section.id ? `1px solid ${colors.accent}` : '1px solid transparent',
             marginBottom: '-1px',
             transition: 'all 0.15s ease'
           }}

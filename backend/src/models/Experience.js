@@ -11,15 +11,16 @@ const Experience = {
             description_en = null,
             tech = [],
             is_current = false,
-            is_internship = false
+            is_internship = false,
+            is_apprenticeship = false
         } = data;
 
         const maxOrder = queryOne('SELECT MAX(sort_order) as max FROM experiences');
         const sortOrder = (maxOrder?.max || 0) + 1;
 
         const result = execute(
-            `INSERT INTO experiences (period, company, role_fr, role_en, description_fr, description_en, tech, is_current, is_internship, sort_order)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO experiences (period, company, role_fr, role_en, description_fr, description_en, tech, is_current, is_internship, is_apprenticeship, sort_order)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 period,
                 company,
@@ -30,6 +31,7 @@ const Experience = {
                 JSON.stringify(Array.isArray(tech) ? tech : []),
                 is_current ? 1 : 0,
                 is_internship ? 1 : 0,
+                is_apprenticeship ? 1 : 0,
                 sortOrder
             ]
         );
@@ -69,6 +71,10 @@ const Experience = {
         if (data.is_internship !== undefined) {
             fields.push('is_internship = ?');
             values.push(data.is_internship ? 1 : 0);
+        }
+        if (data.is_apprenticeship !== undefined) {
+            fields.push('is_apprenticeship = ?');
+            values.push(data.is_apprenticeship ? 1 : 0);
         }
         if (data.sort_order !== undefined) {
             fields.push('sort_order = ?');
@@ -118,6 +124,7 @@ const Experience = {
             tech: parseJson(exp.tech),
             is_current: Boolean(exp.is_current),
             is_internship: Boolean(exp.is_internship),
+            is_apprenticeship: Boolean(exp.is_apprenticeship),
         };
     },
 };

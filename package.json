@@ -9,6 +9,7 @@
     "dev:backend": "cd backend && npm run dev",
     "build": "cd frontend && npm run build",
     "start": "cd backend && npm start",
+    "prod": "npm run build && NODE_ENV=production npm start",
     "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
     "setup": "cd backend && npm run setup"
   },

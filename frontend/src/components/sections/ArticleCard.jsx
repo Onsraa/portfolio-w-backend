@@ -22,7 +22,7 @@ export default function ArticleCard({ article }) {
 
     return (
         <Link
-            to={`/blog/${article.slug}`}
+            to={`/articles/${article.slug}`}
             style={{
                 display: 'block',
                 padding: '24px 0',

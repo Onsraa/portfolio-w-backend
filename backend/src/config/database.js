@@ -1,17 +1,20 @@
 import initSqlJs from 'sql.js';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname, join, isAbsolute } from 'path';
 import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const backendRoot = join(__dirname, '../..');
 
-const dataDir = join(__dirname, '../../data');
+const dataDir = join(backendRoot, 'data');
 if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
 }
 
-const dbPath = process.env.DATABASE_PATH || join(dataDir, 'portfolio.db');
+// Resolve relative paths from backend root, not CWD
+const rawDbPath = process.env.DATABASE_PATH || './data/portfolio.db';
+const dbPath = isAbsolute(rawDbPath) ? rawDbPath : join(backendRoot, rawDbPath);
 
 let db = null;
 let SQL = null;
@@ -36,6 +39,7 @@ export async function initDatabase() {
     }
 
     createTables();
+    migrateDatabase();
     saveDatabase();
 
     console.log('✓ Base de données initialisée');
@@ -64,6 +68,7 @@ function createTables() {
             tech TEXT,
             is_current INTEGER DEFAULT 0,
             is_internship INTEGER DEFAULT 0,
+            is_apprenticeship INTEGER DEFAULT 0,
             sort_order INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -131,6 +136,24 @@ function createTables() {
             db.run(sql);
         } catch (err) {
             console.error('Erreur création table:', err.message);
+        }
+    }
+}
+
+function migrateDatabase() {
+    const migrations = [
+        { table: 'experiences', column: 'is_apprenticeship', sql: 'ALTER TABLE experiences ADD COLUMN is_apprenticeship INTEGER DEFAULT 0' },
+    ];
+
+    for (const m of migrations) {
+        try {
+            const cols = db.exec(`PRAGMA table_info(${m.table})`);
+            const colNames = cols[0]?.values.map(row => row[1]) || [];
+            if (!colNames.includes(m.column)) {
+                db.run(m.sql);
+            }
+        } catch (err) {
+            // Column may already exist
         }
     }
 }

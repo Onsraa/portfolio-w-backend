@@ -20,8 +20,9 @@ export default function App() {
             {/* Public routes */}
             <Route path="/" element={<Layout />}>
                 <Route index element={<HomePage />} />
-                <Route path="blog" element={<BlogPage />} />
-                <Route path="blog/:slug" element={<ArticlePage />} />
+                <Route path="projects" element={<HomePage section="projects" />} />
+                <Route path="articles" element={<BlogPage />} />
+                <Route path="articles/:slug" element={<ArticlePage />} />
             </Route>
 
             {/* Admin routes */}

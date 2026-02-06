@@ -99,13 +99,19 @@ export const processImage = async (req, res, next) => {
 
 // Supprimer une image
 export const deleteImage = (filename) => {
-  const filepath = join(uploadsDir, filename);
-  
+  // Sanitize filename to prevent path traversal
+  const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '');
+  if (!safeName || safeName !== filename) {
+    throw new Error('Nom de fichier invalide');
+  }
+
+  const filepath = join(uploadsDir, safeName);
+
   if (fs.existsSync(filepath)) {
     fs.unlinkSync(filepath);
   }
-  
-  execute('DELETE FROM images WHERE filename = ?', [filename]);
+
+  execute('DELETE FROM images WHERE filename = ?', [safeName]);
 };
 
 // Lister les images

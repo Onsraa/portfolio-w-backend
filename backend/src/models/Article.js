@@ -49,8 +49,11 @@ const Article = {
         return this.findById(result.lastInsertRowid);
     },
 
-    // Vérifier si un slug existe
-    slugExists(slug) {
+    slugExists(slug, excludeId = null) {
+        if (excludeId) {
+            const existing = queryOne('SELECT id FROM articles WHERE slug = ? AND id != ?', [slug, excludeId]);
+            return existing !== null;
+        }
         const existing = queryOne('SELECT id FROM articles WHERE slug = ?', [slug]);
         return existing !== null;
     },
@@ -117,7 +120,16 @@ const Article = {
         const fields = [];
         const values = [];
 
-        const stringFields = ['title_fr', 'title_en', 'slug', 'excerpt_fr', 'excerpt_en', 'cover_image'];
+        // Handle slug separately to sanitize and check uniqueness
+        if (data.slug !== undefined && data.slug.trim()) {
+            const sanitized = this.sanitizeSlug(data.slug);
+            if (sanitized && !this.slugExists(sanitized, id)) {
+                fields.push('slug = ?');
+                values.push(sanitized);
+            }
+        }
+
+        const stringFields = ['title_fr', 'title_en', 'excerpt_fr', 'excerpt_en', 'cover_image'];
         for (const field of stringFields) {
             if (data[field] !== undefined) {
                 fields.push(`${field} = ?`);

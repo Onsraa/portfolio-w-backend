@@ -29,8 +29,8 @@ export default function Layout() {
     };
 
     const getActiveTab = () => {
-        if (location.pathname.startsWith('/blog')) return 'articles';
-        if (location.hash === '#projets') return 'projets';
+        if (location.pathname.startsWith('/articles')) return 'articles';
+        if (location.pathname.startsWith('/projects')) return 'projects';
         return 'experience';
     };
 
@@ -39,12 +39,12 @@ export default function Layout() {
     const navButtonStyle = (isActive) => ({
         background: 'none',
         border: 'none',
-        padding: '20px 24px',
+        padding: 'clamp(12px, 3vw, 20px) clamp(10px, 3vw, 24px)',
         color: isActive ? colors.accent : colors.textDarker,
-        fontSize: '13px',
+        fontSize: 'clamp(11px, 2.5vw, 13px)',
         fontFamily: 'inherit',
         textTransform: 'uppercase',
-        letterSpacing: '0.1em',
+        letterSpacing: 'clamp(0.03em, 1vw, 0.1em)',
         borderBottom: isActive ? `1px solid ${colors.accent}` : '1px solid transparent',
         marginBottom: '-1px',
         transition: 'all 0.15s ease',
@@ -67,7 +67,7 @@ export default function Layout() {
             <nav style={{
                 maxWidth: '900px',
                 margin: '0 auto',
-                padding: '0 24px',
+                padding: '0 clamp(8px, 3vw, 24px)',
                 borderBottom: `1px solid ${colors.border}`,
                 display: 'flex',
                 gap: '0'
@@ -75,10 +75,10 @@ export default function Layout() {
                 <Link to="/" style={navButtonStyle(activeTab === 'experience')}>
                     {t.experience}
                 </Link>
-                <Link to="/#projets" style={navButtonStyle(activeTab === 'projets')}>
+                <Link to="/projects" style={navButtonStyle(activeTab === 'projects')}>
                     {t.projects}
                 </Link>
-                <Link to="/blog" style={navButtonStyle(activeTab === 'articles')}>
+                <Link to="/articles" style={navButtonStyle(activeTab === 'articles')}>
                     {t.articles}
                 </Link>
             </nav>

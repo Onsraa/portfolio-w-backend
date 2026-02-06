@@ -64,7 +64,7 @@ export default function SkillsPage() {
 
   const startEdit = (category) => {
     setEditingCategory(category);
-    setEditValue(skills[category].join(', '));
+    setEditValue((skills[category] || []).join(', '));
   };
 
   if (loading) return <Loading />;

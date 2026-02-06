@@ -250,8 +250,9 @@ export default function DashboardPage() {
                                         marginLeft: '12px',
                                         padding: '2px 8px',
                                         fontSize: '10px',
-                                        background: article.is_published ? '#1a2a1a' : '#2a2a1a',
-                                        color: article.is_published ? '#5a8a5a' : '#8a8a5a',
+                                        background: article.is_published ? colors.bgHover : colors.bgHover,
+                                        color: article.is_published ? '#5a8a5a' : colors.textMuted,
+                                        border: `1px solid ${colors.border}`,
                                     }}>
                     {article.is_published ? 'publié' : 'brouillon'}
                   </span>

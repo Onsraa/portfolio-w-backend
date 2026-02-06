@@ -165,7 +165,8 @@ async function importDemoData(Experience, Project, Skill) {
             description_en: 'Development of tools to accelerate productivity for AutoCAD/BricsCAD engineers. Implementation of analysis tools to optimize expenses.',
             tech: ['C#', 'VB (.NET)', 'Lisp (AutoLisp)', 'AutoCAD', 'BricsCAD', 'Python', 'Power Automate'],
             is_current: false,
-            is_internship: true,
+            is_internship: false,
+            is_apprenticeship: true,
         },
         {
             period: '2022 — 2023',
@@ -176,14 +177,21 @@ async function importDemoData(Experience, Project, Skill) {
             description_en: 'Development of applications and tools to improve productivity for partner companies.',
             tech: ['PHP', 'NodeJS', 'MySQL', 'Powershell', 'VBA', 'Windev28', 'Power Automate'],
             is_current: false,
-            is_internship: true,
+            is_internship: false,
+            is_apprenticeship: true,
         },
     ];
 
+    let expCount = 0;
     for (const exp of experiences) {
-        Experience.create(exp);
+        try {
+            Experience.create(exp);
+            expCount++;
+        } catch (err) {
+            if (!err.message?.includes('UNIQUE')) throw err;
+        }
     }
-    console.log(`✓ ${experiences.length} expériences importées`);
+    console.log(`✓ ${expCount} expériences importées (${experiences.length - expCount} déjà existantes)`);
 
     // Projets (multilingue)
     const projects = [
@@ -219,10 +227,16 @@ async function importDemoData(Experience, Project, Skill) {
         },
     ];
 
+    let projCount = 0;
     for (const proj of projects) {
-        Project.create(proj);
+        try {
+            Project.create(proj);
+            projCount++;
+        } catch (err) {
+            if (!err.message?.includes('UNIQUE')) throw err;
+        }
     }
-    console.log(`✓ ${projects.length} projets importés`);
+    console.log(`✓ ${projCount} projets importés (${projects.length - projCount} déjà existants)`);
 
     // Compétences
     const skills = {

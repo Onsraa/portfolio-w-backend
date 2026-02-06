@@ -222,8 +222,6 @@ export default function ArticleEditorPage() {
                 is_published: publish ? true : article.is_published,
             };
 
-            console.log('Données envoyées:', articleData);
-
             let response;
             if (isEditing) {
                 response = await articlesApi.update(id, articleData);
@@ -238,7 +236,7 @@ export default function ArticleEditorPage() {
             }
         } catch (err) {
             console.error('Erreur sauvegarde:', err);
-            setError(err.response?.data?.error || 'Erreur lors de la sauvegarde');
+            setError(err.message || 'Erreur lors de la sauvegarde');
         } finally {
             setSaving(false);
         }
@@ -463,7 +461,7 @@ export default function ArticleEditorPage() {
                         type="text"
                         value={tagInput}
                         onChange={(e) => setTagInput(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
                         placeholder="Ajouter un tag..."
                         style={{ ...inputStyle, flex: 1 }}
                     />

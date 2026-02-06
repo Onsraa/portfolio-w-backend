@@ -17,6 +17,8 @@ function ContentBlock({ block }) {
                     color: colors.textSecondary,
                     fontSize: '15px',
                     lineHeight: 1.8,
+                    overflowWrap: 'break-word',
+                    wordBreak: 'break-word',
                 }}>
                     {block.content}
                 </p>
@@ -32,6 +34,8 @@ function ContentBlock({ block }) {
                     fontSize: sizes[block.level] || '22px',
                     fontWeight: 400,
                     letterSpacing: '-0.01em',
+                    overflowWrap: 'break-word',
+                    wordBreak: 'break-word',
                 }}>
           <span style={{ color: colors.textDarkest, marginRight: '12px' }}>
             {'#'.repeat(block.level || 2)}
@@ -82,6 +86,8 @@ function ContentBlock({ block }) {
                     fontStyle: 'italic',
                     fontSize: '15px',
                     lineHeight: 1.7,
+                    overflowWrap: 'break-word',
+                    wordBreak: 'break-word',
                 }}>
                     {block.content}
                 </blockquote>
@@ -140,7 +146,7 @@ function ContentBlock({ block }) {
 export default function ArticlePage() {
     const { slug } = useParams();
     const { colors } = useTheme();
-    const { t, getLocalized } = useLanguage();
+    const { language, t, getLocalized } = useLanguage();
     const [article, setArticle] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -171,7 +177,8 @@ export default function ArticlePage() {
     }, [slug]);
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('fr-FR', {
+        const locale = language === 'fr' ? 'fr-FR' : 'en-US';
+        return new Date(dateString).toLocaleDateString(locale, {
             day: 'numeric',
             month: 'long',
             year: 'numeric',
@@ -190,7 +197,7 @@ export default function ArticlePage() {
                     {t.articleNotFoundDesc}
                 </p>
                 <Link
-                    to="/blog"
+                    to="/articles"
                     style={{
                         display: 'inline-block',
                         marginTop: '24px',
@@ -210,7 +217,7 @@ export default function ArticlePage() {
         <article>
             <header style={{ marginBottom: '48px' }}>
                 <Link
-                    to="/blog"
+                    to="/articles"
                     style={{
                         display: 'inline-block',
                         marginBottom: '32px',
@@ -279,7 +286,7 @@ export default function ArticlePage() {
             {article.cover_image && (
                 <img
                     src={article.cover_image}
-                    alt={article.title}
+                    alt={title.value}
                     style={{
                         width: '100%',
                         height: 'auto',
@@ -289,8 +296,11 @@ export default function ArticlePage() {
                 />
             )}
 
-            <div style={{ marginBottom: '60px' }}>
-                {article.content?.map((block, i) => (
+            <div style={{ marginBottom: '60px', overflow: 'hidden' }}>
+                {(article[`content_${language}`]?.length
+                    ? article[`content_${language}`]
+                    : article[`content_${language === 'fr' ? 'en' : 'fr'}`] || []
+                ).map((block, i) => (
                     <ContentBlock key={i} block={block} />
                 ))}
             </div>
@@ -300,7 +310,7 @@ export default function ArticlePage() {
                 borderTop: `1px solid ${colors.border}`,
             }}>
                 <Link
-                    to="/blog"
+                    to="/articles"
                     style={{
                         color: colors.textMuted,
                         textDecoration: 'none',
